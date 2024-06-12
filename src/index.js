@@ -9,6 +9,7 @@ import { connectDB } from './db.js';
 
 
 connectDB();
-app.listen(3000, () => {
-    console.log('Servidor iniciado en http://localhost:3000');
+const server = process.env.PORT || 3006;
+app.listen(server, () => {
+    console.log('Servidor iniciado en http://localhost:'+ server);
   }   );
