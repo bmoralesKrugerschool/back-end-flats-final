@@ -92,6 +92,16 @@ export const logout = async (req, res) => {
     return res.status(200).json(ApiResponse.success(200,'Cierre de sesión exitoso.', null));
 }
 
+export const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+        return res.status(400).json(ApiResponse.error(400,'El correo es requerido.', null));
+    }
+    
+    const user = await UserModel
+    return res.status(200).json(ApiResponse.success(200,'forgotPassword', null));
+}
+
 /**
  * Perfil de usuario.
  * @param {*} req 
