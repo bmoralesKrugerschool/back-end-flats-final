@@ -40,7 +40,6 @@ export const register = async (req, res) => {
         const savedUser = await newUser.save();
 
         const token = await createAccessToken({ id: savedUser._id, email: savedUser.email });
-        //const token = await createAccessToken({ id: savedUser._id, email: savedUser.email });
         //Guardar el token en una cookie
         res.cookie('token', token, { httpOnly: true });
         return res.status(201).json(ApiResponse.success(201,'Usuario registrado con éxito', { token }));

@@ -23,7 +23,6 @@ const flatSchema = new mongoose.Schema({
     },
     hasAc: {
         type: Boolean,
-        default: Date.now,
         required: true
     },
     rentPrice: {
@@ -52,4 +51,4 @@ const flatSchema = new mongoose.Schema({
     timestamps: true
 });
 
-export default mongoose.model('Flast',flatSchema)
+export default mongoose.model('Flats',flatSchema)
