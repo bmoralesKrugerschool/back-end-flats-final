@@ -38,8 +38,13 @@ export const register = async (req, res) => {
         });
         //Guardar el usuario
         const savedUser = await newUser.save();
-
-        const token = await createAccessToken({ id: savedUser._id, email: savedUser.email });
+        //Generar token de acceso
+        const token = await createAccessToken({ 
+            id: savedUser._id, 
+            email: savedUser.email,
+            lastName: savedUser.lastName,
+            name: savedUser.name,
+        });
         //Guardar el token en una cookie
         res.cookie('token', token, { httpOnly: true });
         return res.status(201).json(ApiResponse.success(201,'Usuario registrado con éxito', { token }));
@@ -71,7 +76,7 @@ export const login = async (req, res) => {
             return res.status(400).json(ApiResponse.error(400,'Credenciales incorrectas',null));
         }
         // 
-        const token = await createAccessToken({ id: user._id, email: user.email });
+        const token = await createAccessToken({ id: user._id, email: user.email , name: user.name, lastName: user.lastName});
         //Guardar el token en una cookie
         res.cookie('token', token, { httpOnly: true });
         return res.status(200).json(ApiResponse.success(200,'Inicio de sesión exitoso.',{ token } ));
@@ -108,7 +113,7 @@ export const forgotPassword = async (req, res) => {
  * @returns 
  */
 export const profile = async (req, res) => { 
-    const user = await UserModel.findById(req.user.id);
+    /**const user = await UserModel.findById(req.user.id);
     if (!user) {
         return res.status(404).json(ApiResponse.error(404,'Usuario no encontrado.', null));
     }
@@ -117,6 +122,6 @@ export const profile = async (req, res) => {
         name: user.name,
         lastName: user.lastName,
         email: user.email
-    }
-    return res.status(200).json(ApiResponse.success(200,'Perfil de usuario', activeUser));
+    }*/
+    return res.status(200).json(ApiResponse.success(200,'Perfil de usuario'));
 }

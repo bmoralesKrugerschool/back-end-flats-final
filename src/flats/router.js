@@ -1,11 +1,11 @@
 import { Router } from "express";
 import {createFlat, getFlat} from './controller.js';
-
+import { validateToken } from "../middlewares/validateToken.js";
 
 const router = Router();
 
-router.get('/getFlat/:idFlat',getFlat);
+router.get('/getFlat/:idFlat',validateToken, getFlat);
 
-router.post('/createFlat',createFlat);
+router.post('/createFlat',validateToken, createFlat);
 
 export default router;
