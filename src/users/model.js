@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
         type:String,
         required: [true, 'La contraseña es requerida'],
         trim:true,
-        minlength: 6,
+        minlength: 8 //Mínimo 8 caracteres,
     },
     role:{ //Rol del usuario o permiso que tiene 
         type:String,

@@ -15,7 +15,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
  */
 export const register = async (req, res) => {
     const { name, lastName, email, password, role, status, birthDate} = req.body;
-
     if (!name || !lastName || !email || !password || !role || !status || !birthDate) {
         return res.status(400).json(ApiResponse.error(400, 'Todos los campos son requeridos.', null));
     }

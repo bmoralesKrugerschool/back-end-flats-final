@@ -1,5 +1,8 @@
 import { Router } from "express";
-import {createFlat, getFlat, updateFlat,getFlats} from './controller.js';
+import {createFlat, 
+    getFlat, 
+    updateFlat,
+    getFlats} from './controller.js';
 import { validateToken } from "../middlewares/validateToken.js";
 
 const router = Router();
