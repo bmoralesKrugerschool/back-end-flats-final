@@ -36,7 +36,7 @@ export const getFlat = async (req, res) => {
  */ 
 export const getFlats = async (req, res) => { 
     try {
-        const flats = await FlatModel.find();
+        const flats = await FlatModel.find().populate('user');
         return res.status(200).json(ApiResponse.success(200, 'Flats obtenidos con éxito', flats));
     } catch (error) {
         console.error('Error getting flats:', error);
@@ -97,6 +97,8 @@ export const createFlat = async (req, res) => {
  * @returns     flat actualizado
  */
 export const updateFlat = async (req, res) => { 
+    console.log('Ingreso a updateFlat', req.body)
+
     const { idFlat } = req.params;
     const { title, description, areaSize, city, dateAvailable, hasAc, rentPrice, streetName, streetNumber, user, yearBuilt } = req.body;
     if (!idFlat) {
@@ -130,4 +132,58 @@ export const updateFlat = async (req, res) => {
         return res.status(500).json(ApiResponse.error(500, 'Error interno del servidor', error.message));
     }
 
+}
+
+/**
+ * Eliminar un flat de la base de datos.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
+export const deleteFlat = async (req, res) => { 
+    const { idFlat } = req.params;
+    if (!idFlat) {
+        return res.status(400).json(ApiResponse.error(400, 'ID de flat requerido', null));
+    }
+    // Verificar si el valor del idFlat es un ObjectId válido
+    if (!mongoose.Types.ObjectId.isValid(idFlat)) {
+        return res.status(400).json(ApiResponse.error(400, 'ID de flat inválido', null));
+    }
+    const flat = await FlatModel.findById(idFlat);
+    if (!flat) {
+        return res.status(404).json(ApiResponse.error(404, 'Flat no encontrado', null));
+    }
+    try {
+        await FlatModel.findByIdAndDelete(idFlat);
+        return res.status(200).json(ApiResponse.success(200, 'Flat eliminado con éxito', null));
+    } catch (error) {
+        console.error('Error deleting flat:', error);
+        return res.status(500).json(ApiResponse.error(500, 'Error interno del servidor', error.message));
+    }
+}
+
+
+
+/**
+ * Extraer todos los flats de un usuario.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
+
+export const getFlatsByUser = async (req, res) => {
+    const { idUser } = req.params;
+    if (!idUser) {
+        return res.status(400).json(ApiResponse.error(400, 'ID de usuario requerido', null));
+    }
+    // Verificar si el valor del idUser es un ObjectId válido
+    if (!mongoose.Types.ObjectId.isValid(idUser)) {
+        return res.status(400).json(ApiResponse.error(400, 'ID de usuario inválido', null));
+    }
+    const user = await UserModel.findById(idUser);
+    if (!user) {
+        return res.status(404).json(ApiResponse.error(404, 'Usuario no encontrado', null));
+    }
+    const flats = await FlatModel.find({ user: idUser }).populate('user');
+    return res.status(200).json(ApiResponse.success(200, 'Flats obtenidos con éxito', flats));  
 }
