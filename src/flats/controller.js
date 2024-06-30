@@ -35,9 +35,76 @@ export const getFlat = async (req, res) => {
  * @returns     todos los flats de la base de datos
  */ 
 export const getFlats = async (req, res) => { 
+    const { city, minRentPrice, maxRentPrice, minAreaSize, maxAreaSize, page = 1, limit = 3, sortField = 'areaSize', sortOrder = 'desc' } = req.query;
+console.log('city:', city);
+    console.log('minRentPrice:', minRentPrice);
+    console.log('maxRentPrice:', maxRentPrice);
+    console.log('minAreaSize:', minAreaSize);
+    console.log('maxAreaSize:', maxAreaSize);
+    console.log('page:', page);
+    console.log('limit:', limit);
+    
+    const filters = {};
+    
+    
+    if (city) filters.city = city;
+    if (minRentPrice) filters.rentPrice = { ...filters.rentPrice, $gte: minRentPrice };
+    if (maxRentPrice) filters.rentPrice = { ...filters.rentPrice, $lte: maxRentPrice };
+    if (minAreaSize) filters.areaSize = { ...filters.areaSize, $gte: minAreaSize };
+    if (maxAreaSize) filters.areaSize = { ...filters.areaSize, $lte: maxAreaSize };
+
+    // Calcular el offset para la paginación
+    const offset = (page - 1) * limit;
+    /**
+     * city: sortDirection,
+        rentPrice: sortDirection,
+        areaSize: sortDirection
+     */
+
+    console.log('filters:', filters);
+    console.log('offset:', offset);
+    console.log('limit:', limit);
+    console.log('page:', page);
+    console.log('pageO:', parseInt(page));
+
+    // Convertir sortOrder a -1 o 1
+    const sortDirection = sortOrder === 'desc' ? -1 : 1;
+
+    // Definir los campos de ordenación
+    const sortOptions = {};
+    sortOptions[sortField] = sortDirection;
+    
+
+    console.log('sortOptions:', sortOptions);
+
     try {
-        const flats = await FlatModel.find().populate('user');
-        return res.status(200).json(ApiResponse.success(200, 'Flats obtenidos con éxito', flats));
+
+        const flats = await FlatModel.find(filters)
+        .populate('user')
+        .skip(offset)
+        .limit(parseInt(limit))
+        .sort(sortOptions); // Ordenar por ciudad, precio y tamaño del área
+
+        const flat  = {};
+        const totalFlats = await FlatModel.countDocuments(filters);
+        flat.flatsTotal = flats.length;
+            flat.flats = flats;
+            flat.page = page;
+            flat.limit = limit;
+            flat.pages = Math.ceil(flats.length / limit);
+        if(flats.length === 0){
+            console.log('david',Math.ceil(totalFlats / limit),totalFlats,limit,page)
+            
+            return res.status(200).json(ApiResponse.success(200, 'No se encontraron flats', flat));
+         } else {
+            //flat.flatsO = flats.slice(offset, offset + parseInt(limit));
+            console.log('david',Math.ceil(totalFlats / limit),totalFlats,limit,page)
+            console.log('aqui',flats.length)
+            return res.status(200).json(ApiResponse.success(200, 'Flats obtenidos con éxito', flat));
+         }
+
+
+        
     } catch (error) {
         console.error('Error getting flats:', error);
         return res.status(500).json(ApiResponse.error(500, 'Error interno del servidor', error.message));
