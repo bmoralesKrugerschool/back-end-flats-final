@@ -16,7 +16,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 export const register = async (req, res) => {
     const { name, lastName, email, password, role, status, birthDate} = req.body;
     if (!name || !lastName || !email || !password || !role || !status || !birthDate) {
-        return res.status(400).json(ApiResponse.error(400, 'Todos los campos son requeridos.', null));
+        return res.status(400).json(ApiResponse.error(400, '.', null));
     }
     try {
         const existingUser = await UserModel.findOne({ email });
@@ -46,7 +46,7 @@ export const register = async (req, res) => {
         });
         //Guardar el token en una cookie
         res.cookie('token', token, { httpOnly: true });
-        return res.status(201).json(ApiResponse.success(201,'Usuario registrado con éxito', { token }));
+        return res.status(201).json(ApiResponse.success(201,'Usuario registrado con éxito', { token, user: savedUser }));
     } catch (error) {
         console.error('Error:', error);
         return res.status(500).json(ApiResponse.error(500,'Error en el servidor', null));
@@ -67,7 +67,7 @@ export const login = async (req, res) => {
     try {
         const user = await UserModel.findOne({ email });
         if (!user) {
-            return res.status(400).json(ApiResponse.error(400,'Credenciales incorrectas',null));
+            return res.status(400).json(ApiResponse.error(400,'El usuario no existe.',null));
         }
         //comparar contraseñas mediante bcryptjs
         const isMatch = await bcryptjs.compare(password, user.password);
@@ -78,7 +78,7 @@ export const login = async (req, res) => {
         const token = await createAccessToken({ id: user._id, email: user.email , name: user.name, lastName: user.lastName});
         //Guardar el token en una cookie
         res.cookie('token', token, { httpOnly: true });
-        return res.status(200).json(ApiResponse.success(200,'Inicio de sesión exitoso.',{ token } ));
+        return res.status(200).json(ApiResponse.success(200,'Inicio de sesión exitoso.',{ token, user: user  } ));
     } catch (error) {
         console.error('Error::', error);
         return res.status(500).json(ApiResponse.error(500,'Error en el servidor.', null));
