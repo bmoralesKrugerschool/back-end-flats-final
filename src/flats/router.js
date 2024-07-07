@@ -16,7 +16,7 @@ router.delete('/deleteFlat/:idFlat',validateToken, deleteFlat); //ruta para elim
 router.put('/updateFlat/:idFlat',validateToken, updateFlat); //ruta para actualizar un flat
 
 //USER POR FLATS
-router.get('/getFlatsByUser/:idUser', getFlatsByUser); //ruta para obtener un flat por usuario
+router.get('/getFlatsByUser/:idUser', validateToken, getFlatsByUser); //ruta para obtener un flat por usuario
 
 
 export default router;
