@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from 'mongoose-paginate-v2';
 const flatSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -50,5 +51,6 @@ const flatSchema = new mongoose.Schema({
 },{
     timestamps: true
 });
+flatSchema.plugin(mongoosePaginate);
 
 export default mongoose.model('Flats',flatSchema)

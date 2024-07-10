@@ -231,26 +231,39 @@ export const deleteFlat = async (req, res) => {
 
 
 
+
 /**
- * Extraer todos los flats de un usuario.
+ * Obtener todos los flats creados por un usuario con paginación
  * @param {*} req 
  * @param {*} res 
- * @returns 
  */
+export const getUserCreatedFlats = async (req, res) => {
+    
+    const { page = 1, limit = 10 ,userId} = req.query;  // Valores por defecto para page y limit
 
-export const getFlatsByUser = async (req, res) => {
-    const { idUser } = req.params;
-    if (!idUser) {
-        return res.status(400).json(ApiResponse.error(400, 'ID de usuario requerido', null));
-    }
-    // Verificar si el valor del idUser es un ObjectId válido
-    if (!mongoose.Types.ObjectId.isValid(idUser)) {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
         return res.status(400).json(ApiResponse.error(400, 'ID de usuario inválido', null));
     }
-    const user = await UserModel.findById(idUser);
-    if (!user) {
-        return res.status(404).json(ApiResponse.error(404, 'Usuario no encontrado', null));
+
+    try {
+        const options = {
+            page: parseInt(page, 10),
+            limit: parseInt(limit, 10),
+            lean: true  // Usar lean para mejorar el rendimiento
+        };
+
+        // Buscar todos los flats creados por el usuario con paginación
+        const flats = await FlatModel.paginate({ user: userId }, options);
+
+        return res.status(200).json(ApiResponse.success(200, 'Flats obtenidos con éxito', {
+            flats: flats.docs,
+            totalDocs: flats.totalDocs,
+            totalPages: flats.totalPages,
+            page: flats.page,
+            limit: flats.limit
+        }));
+    } catch (error) {
+        console.error('Error getting user created flats:', error);
+        return res.status(500).json(ApiResponse.error(500, 'Error en el servidor', error));
     }
-    const flats = await FlatModel.find({ user: idUser }).populate('user');
-    return res.status(200).json(ApiResponse.success(200, 'Flats obtenidos con éxito', flats));  
-}
+};

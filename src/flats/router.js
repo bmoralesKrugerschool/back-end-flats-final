@@ -4,7 +4,7 @@ import {createFlat,
     updateFlat,
     getFlats,
     deleteFlat
-,getFlatsByUser} from './controller.js';
+,getUserCreatedFlats} from './controller.js';
 import { validateToken } from "../middlewares/validateToken.js";
 
 const router = Router();
@@ -16,7 +16,7 @@ router.delete('/deleteFlat/:idFlat',validateToken, deleteFlat); //ruta para elim
 router.put('/updateFlat/:idFlat',validateToken, updateFlat); //ruta para actualizar un flat
 
 //USER POR FLATS
-router.get('/getFlatsByUser/:idUser', validateToken, getFlatsByUser); //ruta para obtener un flat por usuario
+router.get('/getUserCreatedFlats', validateToken, getUserCreatedFlats); //ruta para obtener un flat por usuario
 
 
 export default router;
