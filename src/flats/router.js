@@ -9,7 +9,7 @@ import { validateToken } from "../middlewares/validateToken.js";
 
 const router = Router();
 
-router.get('/getFlats',validateToken, getFlats); //ruta para obtener un flat
+router.get('/getFlats', getFlats); //ruta para obtener un flat
 router.get('/getFlat/:idFlat',validateToken, getFlat); //ruta para obtener un flat
 router.post('/createFlat',validateToken, createFlat); //ruta para crear un flat
 router.delete('/deleteFlat/:idFlat',validateToken, deleteFlat); //ruta para eliminar un flat
