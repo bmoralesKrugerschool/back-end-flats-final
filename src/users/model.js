@@ -4,7 +4,6 @@ const userSchema = new mongoose.Schema({
         type:String,
         required: true, //Es requerido
         trim:true, //Elimina espacios al comienzo y al final
-        lowercase: true //Convierte a minúsculas
     },
     lastName: {
         type:String,
@@ -30,12 +29,18 @@ const userSchema = new mongoose.Schema({
     },
     status:{ //Estado del usuario
         type:Boolean,
-        default:true
+        default:true //false bloqueado, true activo
     },
     birthDate:{ //Fecha de nacimiento
         type:Date,
         required:[true, 'La fecha de nacimiento es requerida']
-    }
+    },
+    image:{ //Imagen del usuario    
+        type:String,
+        default:'https://res.cloudinary.com/dv7hsw3kg/image/upload/v1629890099/avatars/avatar-1_ayx1tj.png'
+    },
+
+
 
 },{
     timestamps: true

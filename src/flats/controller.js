@@ -35,8 +35,9 @@ export const getFlat = async (req, res) => {
  * @returns     todos los flats de la base de datos
  */ 
 export const getFlats = async (req, res) => { 
+
     const { city, minRentPrice, maxRentPrice, minAreaSize, maxAreaSize, page = 1, limit = 3, sortField = 'areaSize', sortOrder = 'desc' } = req.query;
-console.log('city:', city);
+    console.log('city:', city);
     console.log('minRentPrice:', minRentPrice);
     console.log('maxRentPrice:', maxRentPrice);
     console.log('minAreaSize:', minAreaSize);

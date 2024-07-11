@@ -21,6 +21,9 @@ export const register = async (req, res) => {
     if (!name || !lastName || !email || !password || !role || !status || !birthDate) {
         return res.status(400).json(ApiResponse.error(400, 'Todos los campos son requeridos.', null));
     }
+
+    console.log('Mensajes',req.files)
+    console.log('Requiere',req)
     
     try {
         // Verificar si el usuario ya existe
