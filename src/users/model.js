@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema({
         type:Date,
         required:[true, 'La fecha de nacimiento es requerida']
     },
-    image:{ //Imagen del usuario    
+    photos:{ //Imagen del usuario    
         type:String,
         default:'https://res.cloudinary.com/dv7hsw3kg/image/upload/v1629890099/avatars/avatar-1_ayx1tj.png'
     },

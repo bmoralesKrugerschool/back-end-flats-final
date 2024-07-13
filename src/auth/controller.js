@@ -5,6 +5,8 @@ import UserModel from '../users/model.js';
 import bcryptjs from 'bcryptjs';
 import { createAccessToken } from '../libs/jwt.js';
 import ApiResponse from '../../utils/apiResponse.js';
+import {updateImg} from '../libs/cloudDinary.js';
+import fs from 'fs-extra';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
@@ -18,19 +20,31 @@ export const register = async (req, res) => {
     const { name, lastName, email, password, role, status, birthDate } = req.body;
     
     // Validación de campos obligatorios
-    if (!name || !lastName || !email || !password || !role || !status || !birthDate) {
+    if (!name || !lastName || !email || !password || !role || !status || !birthDate ) {
         return res.status(400).json(ApiResponse.error(400, 'Todos los campos son requeridos.', null));
     }
-
-    console.log('Mensajes',req.files)
-    console.log('Requiere',req)
+    console.log('Fotos de usurio',req.files.photos.tempFilePath);
     
+
     try {
         // Verificar si el usuario ya existe
         const existingUser = await UserModel.findOne({ email });
         if (existingUser) {
             return res.status(400).json(ApiResponse.error(400, 'El correo ya está registrado.', null));
         }
+
+        console.log('Mensajes',req.files);
+        // Subir imagen a Cloudinary
+        if(req.files){
+            const result = await updateImg(req.files.photos.tempFilePath);
+            await fs.remove(req.files.photos.tempFilePath);
+            console.log('result',result);
+            req.body.photos = result.secure_url;
+            
+        }
+
+        console.log('Mensajes',req.body.photos);
+        
 
         // Encriptar la contraseña
         const hashedPassword = await bcryptjs.hash(password, 10);
@@ -43,7 +57,8 @@ export const register = async (req, res) => {
             password: hashedPassword,
             role,
             status,
-            birthDate
+            birthDate,
+            photos: req.body.photos,
         });
 
         // Guardar el usuario en la base de datos
@@ -60,6 +75,7 @@ export const register = async (req, res) => {
 
         // Guardar el token en una cookie
         res.cookie('token', token, { httpOnly: true });
+        await fs.remove(req.files.photos.tempFilePath);
 
         return res.status(201).json(ApiResponse.success(201, 'Usuario registrado con éxito', { token, user: savedUser }));
     } catch (error) {

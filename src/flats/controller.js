@@ -2,6 +2,8 @@ import ApiResponse from '../../utils/apiResponse.js';
 import FlatModel from './model.js';
 import mongoose from 'mongoose';
 import UserModel from '../users/model.js';
+import {updateImgFlat} from '../libs/cloudDinary.js';
+import fs from 'fs-extra';
 
 /**
  * Extraer un flat de la base de datos.
@@ -135,7 +137,16 @@ export const createFlat = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(user)) {
             return res.status(400).json(ApiResponse.error(400, 'Invalid user ID', null));
         }
+        // Subir imagen a Cloudinary
 
+        console.log('req.files',req.files);
+        if(req.files){
+            const result = await updateImgFlat(req.files.img.tempFilePath);
+            console.log('result',result);
+            req.body.img = result.secure_url;
+            await fs.remove(req.files.img.tempFilePath);
+        }
+        console.log('Mensajes',req.body.img);
         const newFlat = new FlatModel({
             title,
             description,
@@ -147,7 +158,8 @@ export const createFlat = async (req, res) => {
             streetName,
             streetNumber,
             user: new mongoose.Types.ObjectId(user),
-            yearBuilt
+            yearBuilt,
+            img: req.body.img
         });
         // Guardar el flat
         const savedFlat = await newFlat.save();
