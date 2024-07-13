@@ -29,17 +29,27 @@ export const register = async (req, res) => {
     try {
         // Verificar si el usuario ya existe
         const existingUser = await UserModel.findOne({ email });
+        let foto = null;
         if (existingUser) {
             return res.status(400).json(ApiResponse.error(400, 'El correo ya está registrado.', null));
         }
 
         console.log('Mensajes',req.files);
+        const idUser = extractUsername(email);
+        console.log('idUser',idUser);
         // Subir imagen a Cloudinary
         if(req.files){
-            const result = await updateImg(req.files.photos.tempFilePath);
+            const imagenes = {
+                tempFilePath: req.files.photos.tempFilePath,
+                user: idUser
+            }
+            const result = await updateImg(imagenes);
             await fs.remove(req.files.photos.tempFilePath);
             console.log('result',result);
-            req.body.photos = result.secure_url;
+            foto = {
+                url: result.secure_url,
+                public_id: result.public_id
+            };
             
         }
 
@@ -58,7 +68,7 @@ export const register = async (req, res) => {
             role,
             status,
             birthDate,
-            photos: req.body.photos,
+            photos: foto,
         });
 
         // Guardar el usuario en la base de datos
@@ -216,3 +226,19 @@ export const forgotPassword = async (req, res) => {
 
     return res.status(200).json(ApiResponse.success(200, 'Proceso de recuperación de contraseña iniciado.', null));
 };
+
+
+
+
+/// extras
+/**
+ * Extraer el nombre de usuario de una dirección de correo electrónico.
+ * @param {string} email - Dirección de correo electrónico
+ * @returns {string} - Nombre de usuario sin caracteres especiales
+ */
+const extractUsername = (email) => {
+    const username = email.split('@')[0]; // Extrae la parte antes del @
+    const cleanUsername = username.replace(/[^a-zA-Z0-9]/g, ''); // Elimina caracteres especiales
+    const randomNumber = Math.floor(100 + Math.random() * 900); // Genera un número aleatorio de 3 dígitos
+    return `${cleanUsername}${randomNumber}`; // Añade el número aleatorio al final
+}

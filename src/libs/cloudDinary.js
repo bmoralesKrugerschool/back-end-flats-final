@@ -9,8 +9,10 @@ cloudinary.config({
 });
 
 export const updateImg = async filePath => {
-    return await cloudinary.uploader.upload(filePath, {
-        folder: 'users',
+    const { tempFilePath, user } = filePath;
+    
+    return await cloudinary.uploader.upload(tempFilePath, {
+        folder: `users/${user}`,
         use_filename: true,
         unique_filename: false
     });

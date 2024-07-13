@@ -141,6 +141,7 @@ export const createFlat = async (req, res) => {
 
         console.log('req.files',req.files);
         if(req.files){
+            
             const result = await updateImgFlat(req.files.img.tempFilePath);
             console.log('result',result);
             req.body.img = result.secure_url;

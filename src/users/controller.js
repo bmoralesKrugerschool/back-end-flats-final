@@ -19,8 +19,7 @@ export const updateUser = async (req, res) => {
             return res.status(401).json(ApiResponse.error(401, 'No autorizado', null));
         }
         const decoded = jwt.verify(token, TOKEN_SECRET);
-        console.info('Token verificado:', decoded);
-        console.log('req.params.idUser:', req.params.idUser);
+        
         console.log('req.body:', req.body);
 
         const user = await UserModel.findByIdAndUpdate(
