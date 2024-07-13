@@ -125,6 +125,7 @@ export const getFlats = async (req, res) => {
  */
 export const createFlat = async (req, res) => {
     console.log('Ingreso a createFlat', req);
+    let foto = null;
     try {
         const { title, description, areaSize, city, dateAvailable, hasAc, rentPrice, streetName, streetNumber, user, yearBuilt } = req.body;
 
@@ -139,13 +140,28 @@ export const createFlat = async (req, res) => {
         }
         // Subir imagen a Cloudinary
 
-        console.log('req.files',req.files);
+        
+
+        const nameflat =  extractUsername(title);
+        console.log('nameflat',nameflat);
+
         if(req.files){
-            
-            const result = await updateImgFlat(req.files.img.tempFilePath);
+            const tempPath = {
+                tempFilePath: req.files.img.tempFilePath,
+                flat: nameflat
+            }
+
+            const result = await updateImgFlat(tempPath);
+
             console.log('result',result);
-            req.body.img = result.secure_url;
-            await fs.remove(req.files.img.tempFilePath);
+            
+            
+            foto = {
+                url: result.secure_url,
+                public_id: result.public_id
+            };
+            
+            await fs.remove(tempPath.tempFilePath);
         }
         console.log('Mensajes',req.body.img);
         const newFlat = new FlatModel({
@@ -160,7 +176,7 @@ export const createFlat = async (req, res) => {
             streetNumber,
             user: new mongoose.Types.ObjectId(user),
             yearBuilt,
-            img: req.body.img
+            img: foto
         });
         // Guardar el flat
         const savedFlat = await newFlat.save();
@@ -281,3 +297,15 @@ export const getUserCreatedFlats = async (req, res) => {
         return res.status(500).json(ApiResponse.error(500, 'Error en el servidor', error));
     }
 };
+
+/// extras
+/**
+ * Extraer el nombre de usuario de una dirección de correo electrónico.
+ * @param {string} direcion - Dirección de correo electrónico
+ * @returns {string} - Nombre de usuario sin caracteres especiales
+ */
+const extractUsername = (direcion) => {
+   const cleanUsername = direcion.replace(/[^a-zA-Z0-9]/g, '').replace(/\s+/g, ''); // Elimina caracteres especiales y espacios
+    const randomNumber = Math.floor(100 + Math.random() * 900); // Genera un número aleatorio de 3 dígitos
+    return `${cleanUsername}${randomNumber}`; // Añade el número aleatorio al final
+}

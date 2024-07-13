@@ -19,8 +19,9 @@ export const updateImg = async filePath => {
     
 }
 export const updateImgFlat = async filePath => { 
-    return await cloudinary.uploader.upload(filePath, {
-        folder: 'flats',
+    const { tempFilePath,flat } = filePath;
+    return await cloudinary.uploader.upload(tempFilePath, {
+        folder: `flats/${flat}`,
         use_filename: true,
         unique_filename: false
     });
