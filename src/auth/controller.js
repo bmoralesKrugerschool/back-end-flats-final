@@ -7,6 +7,11 @@ import { createAccessToken } from '../libs/jwt.js';
 import ApiResponse from '../../utils/apiResponse.js';
 import {updateImg} from '../libs/cloudDinary.js';
 import fs from 'fs-extra';
+import crypto from 'crypto';
+
+import VerificationCode from '../code/model.js';
+
+import { sendVerificationEmail } from '../libs/emailService.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
@@ -227,8 +232,63 @@ export const forgotPassword = async (req, res) => {
     return res.status(200).json(ApiResponse.success(200, 'Proceso de recuperación de contraseña iniciado.', null));
 };
 
+/**
+ * ENVIA CORREO CON EL CÓDIGO DE VERIFICACIÓN
+ *  @param {*} req 
+ *  @param {*} res
+ */
+export const sendVerificationCode = async (req, res) => {
+    const { email } = req.body;
 
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
 
+    const code = crypto.randomBytes(3).toString('hex'); // Genera un código de 6 caracteres
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // El código expira en 10 minutos
+
+    const verificationCode = new VerificationCode({
+        email,
+        code,
+        expiresAt,
+    });
+
+    await verificationCode.save();
+    await sendVerificationEmail(email, code);
+
+    return res.status(200).json({ message: 'Verification code sent to email' });
+};
+
+/**
+ * 
+ * SE REALIZA LA VERIFICACIÓN DEL CÓDIGO Y SE ACTUALIZA LA CONTRASEÑA
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
+export const verifyCodeAndResetPassword = async (req, res) => {
+    const { email, code, newPassword } = req.body;
+
+    if (!email || !code || !newPassword) {
+        return res.status(400).json({ message: 'Email, code, and new password are required' });
+    }
+
+    const verificationCode = await VerificationCode.findOne({ email, code });
+
+    if (!verificationCode) {
+        return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    if (verificationCode.expiresAt < new Date()) {
+        return res.status(400).json({ message: 'Verification code expired' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.updateOne({ email }, { password: hashedPassword });
+    await VerificationCode.deleteOne({ email, code });
+
+    return res.status(200).json({ message: 'Password reset successful' });
+};
 
 /// extras
 /**
