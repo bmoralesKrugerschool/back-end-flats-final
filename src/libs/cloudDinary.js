@@ -28,7 +28,14 @@ export const updateImgFlat = async filePath => {
     
 }
 
-export const deleteImg = async publicId => { 
-    return await cloudinary.uploader.destroy(publicId);
-    
-}
+export const uploadMultipleImages = async (files, folder) => {
+    const uploadPromises = files.map(file => {
+        return cloudinary.uploader.upload(file.tempFilePath, {
+            folder,
+            use_filename: true,
+            unique_filename: false
+        });
+    });
+    const uploadResults = await Promise.all(uploadPromises);
+    return uploadResults.map(result => result.secure_url);
+};

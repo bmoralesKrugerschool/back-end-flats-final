@@ -3,6 +3,7 @@ import FlatModel from './model.js';
 import mongoose from 'mongoose';
 import UserModel from '../users/model.js';
 import {updateImgFlat} from '../libs/cloudDinary.js';
+import {uploadMultipleImages} from '../libs/cloudDinary.js';
 import fs from 'fs-extra';
 
 /**
@@ -145,7 +146,7 @@ export const createFlat = async (req, res) => {
         const nameflat =  extractUsername(title);
         console.log('nameflat',nameflat);
 
-        if(req.files){
+        /* if(req.files){
             const tempPath = {
                 tempFilePath: req.files.img.tempFilePath,
                 flat: nameflat
@@ -162,7 +163,21 @@ export const createFlat = async (req, res) => {
             };
             
             await fs.remove(tempPath.tempFilePath);
+        } */
+
+        let imageUrls = [];
+
+        if (req.files && req.files.img) {
+            const files = Array.isArray(req.files.img) ? req.files.img : [req.files.img];
+            imageUrls = await uploadMultipleImages(files, `flats/${nameflat}`);
+            
+            // Eliminar archivos temporales
+            for (const file of files) {
+                console.log('file',file);
+                await fs.remove(file.tempFilePath);
+            }
         }
+        
         console.log('Mensajes',req.body.img);
         const newFlat = new FlatModel({
             title,
@@ -176,7 +191,7 @@ export const createFlat = async (req, res) => {
             streetNumber,
             user: new mongoose.Types.ObjectId(user),
             yearBuilt,
-            img: foto
+            img: imageUrls
         });
         // Guardar el flat
         const savedFlat = await newFlat.save();
