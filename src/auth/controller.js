@@ -28,7 +28,8 @@ export const register = async (req, res) => {
     if (!name || !lastName || !email || !password || !role || !status || !birthDate ) {
         return res.status(400).json(ApiResponse.error(400, 'Todos los campos son requeridos.', null));
     }
-    console.log('Fotos de usurio',req.files.photos.tempFilePath);
+
+    console.log('MensajesA',req.files);
     
 
     try {
@@ -39,7 +40,7 @@ export const register = async (req, res) => {
             return res.status(400).json(ApiResponse.error(400, 'El correo ya está registrado.', null));
         }
 
-        console.log('Mensajes',req.files);
+       
         const idUser = extractUsername(email);
         console.log('idUser',idUser);
         // Subir imagen a Cloudinary
@@ -90,7 +91,7 @@ export const register = async (req, res) => {
 
         // Guardar el token en una cookie
         res.cookie('token', token, { httpOnly: true });
-        await fs.remove(req.files.photos.tempFilePath);
+
 
         return res.status(201).json(ApiResponse.success(201, 'Usuario registrado con éxito', { token, user: savedUser }));
     } catch (error) {

@@ -11,5 +11,5 @@ import { connectDB } from './db.js';
 connectDB();
 const server = process.env.PORT || 3006;
 app.listen(server, () => {
-    console.log('Servidor iniciado en http://localhost:'+ server);
-  }   );
+  console.log('Servidor iniciado en http://localhost:' + server);
+});
