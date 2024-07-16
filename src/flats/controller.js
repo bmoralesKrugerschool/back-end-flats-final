@@ -128,11 +128,11 @@ export const createFlat = async (req, res) => {
     console.log('Ingreso a createFlat', req);
     let foto = null;
     try {
-        const { title, description, areaSize, city, dateAvailable, hasAc, rentPrice, streetName, streetNumber, user, yearBuilt } = req.body;
+        const { title, description, areaSize, city, dateAvailable, hasAc, rentPrice, streetName, streetNumber, user, yearBuilt, bathroom, bedrooms, parkingLot, petsAllowed } = req.body;
 
         // Verificar que todos los campos están presentes
         if (!title || !description || !areaSize || !city || !dateAvailable || !hasAc || !rentPrice || !streetName || !streetNumber || !user || !yearBuilt) {
-            return res.status(400).json(ApiResponse.error(400, 'Todos los campos son requeridos.', null));
+            return res.status(400).json(ApiResponse.error(400, 'All fields are required!', null));
         }
 
         // Verificar si el valor del usuario es un ObjectId válido
@@ -140,31 +140,10 @@ export const createFlat = async (req, res) => {
             return res.status(400).json(ApiResponse.error(400, 'Invalid user ID', null));
         }
         // Subir imagen a Cloudinary
-
-        
-
         const nameflat =  extractUsername(title);
         console.log('nameflat',nameflat);
 
-        /* if(req.files){
-            const tempPath = {
-                tempFilePath: req.files.img.tempFilePath,
-                flat: nameflat
-            }
-
-            const result = await updateImgFlat(tempPath);
-
-            console.log('result',result);
-            
-            
-            foto = {
-                url: result.secure_url,
-                public_id: result.public_id
-            };
-            
-            await fs.remove(tempPath.tempFilePath);
-        } */
-
+        
         let imageUrls = [];
 
         if (req.files && req.files.img) {
@@ -191,7 +170,12 @@ export const createFlat = async (req, res) => {
             streetNumber,
             user: new mongoose.Types.ObjectId(user),
             yearBuilt,
-            img: imageUrls
+            img: imageUrls,
+            bathroom,
+            bedrooms,
+            parkingLot,
+            petsAllowed
+            
         });
         // Guardar el flat
         const savedFlat = await newFlat.save();

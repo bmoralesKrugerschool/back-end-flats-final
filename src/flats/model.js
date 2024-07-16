@@ -51,6 +51,25 @@ const flatSchema = new mongoose.Schema({
     img: {
         type: Object,
         default:'https://res.cloudinary.com/dv7hsw3kg/image/upload/v1629890099/avatars/avatar-1_ayx1tj.png'
+    },
+    status: {
+        type: Boolean,
+        default: true
+    },
+    bathroom: {
+        type: Number,
+        required: true
+    },
+    bedrooms: {
+        type: Number,
+        required: true
+    },
+    parkingLot:{
+        type: Number,
+        required: true
+    },
+    petsAllowed: {
+        type: Boolean
     }
 },{
     timestamps: true

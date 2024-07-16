@@ -26,7 +26,7 @@ export const register = async (req, res) => {
     
     // Validación de campos obligatorios
     if (!name || !lastName || !email || !password || !role || !status || !birthDate ) {
-        return res.status(400).json(ApiResponse.error(400, 'Todos los campos son requeridos.', null));
+        return res.status(400).json(ApiResponse.error(400, 'All fields are required!.', null));
     }
 
     console.log('MensajesA',req.files);
@@ -111,7 +111,7 @@ export const login = async (req, res) => {
 
     // Validación de campos obligatorios
     if (!email || !password) {
-        return res.status(400).json(ApiResponse.error(400, 'Todos los campos son requeridos.'));
+        return res.status(400).json(ApiResponse.error(400, 'All fields are required!.'));
     }
 
     try {

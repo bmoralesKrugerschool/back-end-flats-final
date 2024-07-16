@@ -10,7 +10,7 @@ import ApiResponse from '../../utils/apiResponse.js';
 export const addFavorite = async (req, res) => {
     const { user, flats, status } = req.body;
     if (!user || !flats) {
-        return res.status(400).json(ApiResponse.error(400, 'Todos los campos son requeridos.', null));
+        return res.status(400).json(ApiResponse.error(400, 'All fields are required!.', null));
     }
     try {
         if (!mongoose.Types.ObjectId.isValid(user)) {
