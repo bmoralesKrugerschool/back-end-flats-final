@@ -12,6 +12,7 @@ import crypto from 'crypto';
 import VerificationCode from '../code/model.js';
 
 import { sendVerificationEmail } from '../libs/emailService.js';
+import e from 'express';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
@@ -242,7 +243,15 @@ export const sendVerificationCode = async (req, res) => {
     const { email } = req.body;
 
     if (!email) {
-        return res.status(400).json({ message: 'Email is required' });
+        return res.status(400).json(ApiResponse.error(400, 'Email is required.', null));
+    }
+
+    const userExists = await UserModel .findOne({  email });
+
+    console.log('userExists',userExists);
+
+    if (!userExists) {
+        return res.status(400).json(ApiResponse.error(400, 'User does not exist.', null));
     }
 
     const code = crypto.randomBytes(3).toString('hex'); // Genera un código de 6 caracteres
@@ -256,8 +265,7 @@ export const sendVerificationCode = async (req, res) => {
 
     await verificationCode.save();
     await sendVerificationEmail(email, code);
-
-    return res.status(200).json({ message: 'Verification code sent to email' });
+    return res.status(200).json(ApiResponse.error(400, 'Verification code sent to email.', null));
 };
 
 /**
@@ -271,24 +279,32 @@ export const verifyCodeAndResetPassword = async (req, res) => {
     const { email, code, newPassword } = req.body;
 
     if (!email || !code || !newPassword) {
-        return res.status(400).json({ message: 'Email, code, and new password are required' });
+        return res.status(400).json(ApiResponse.error(400, 'Email, code, and new password are required.', null));
     }
 
     const verificationCode = await VerificationCode.findOne({ email, code });
 
     if (!verificationCode) {
-        return res.status(400).json({ message: 'Invalid verification code' });
+        return res.status(400).json(ApiResponse.error(400, 'Invalid verification code.', null));
+        
     }
+
+    const userExists = await UserModel.findOne({ email });  
+
+    if (!userExists) {
+        return res.status(400).json(ApiResponse.error(400, 'User does not exist.', null));
+    }
+
+
 
     if (verificationCode.expiresAt < new Date()) {
-        return res.status(400).json({ message: 'Verification code expired' });
+        return res.status(400).json(ApiResponse.error(400, 'Verification code expired.', null));
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await User.updateOne({ email }, { password: hashedPassword });
+    const hashedPassword = await bcryptjs.hash(newPassword, 10);
+    await UserModel.updateOne({ email }, { password: hashedPassword });
     await VerificationCode.deleteOne({ email, code });
-
-    return res.status(200).json({ message: 'Password reset successful' });
+    return res.status(200).json(ApiResponse.error(200, 'Password reset successful.', null));
 };
 
 /// extras
