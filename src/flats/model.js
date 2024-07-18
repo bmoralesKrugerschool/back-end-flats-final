@@ -1,43 +1,44 @@
 import mongoose from "mongoose";
-import mongoosePaginate from 'mongoose-paginate-v2';
 const flatSchema = new mongoose.Schema({
-    title: {
+    
+    realStateType: {
         type: String,
-        required: true
-    },
-    description: {
-        type: String,
+        enum: ['house', 'apartment','studio', 'loft'],
         required: true
     },
     areaSize: {
-        type: Number,
-        required: true
+        type: Number
     },
     city: {
         type: String,
         required: true
     },
+    sellType:{
+        type: String,
+        enum: ['rent', 'sale', 'lease'],
+        required: true
+    },
     dateAvailable: {
         type: Date,
-        required: true,
+        default: Date.now
+    },
+    publishedData: {
+        type: Date,
         default: Date.now
     },
     hasAc: {
-        type: Boolean,
-        required: true
+        type: Boolean
+        
     },
     rentPrice: {
-        type: Number,
-        required: true
+        type: Number
     },
     streetName: {
-        type: String,
-        required: true
+        type: String
         
     },
     streetNumber: {
-        type: String,
-        required: true
+        type: String
     },
     user:{
         type: mongoose.Schema.Types.ObjectId,
@@ -46,7 +47,6 @@ const flatSchema = new mongoose.Schema({
     },
     yearBuilt: {
         type: Number,
-        required: true
     },
     img: {
         type: Object,
@@ -58,15 +58,12 @@ const flatSchema = new mongoose.Schema({
     },
     bathroom: {
         type: Number,
-        required: true
     },
     bedrooms: {
-        type: Number,
-        required: true
+        type: Number
     },
     parkingLot:{
-        type: Number,
-        required: true
+        type: Number
     },
     petsAllowed: {
         type: Boolean
@@ -74,6 +71,5 @@ const flatSchema = new mongoose.Schema({
 },{
     timestamps: true
 });
-flatSchema.plugin(mongoosePaginate);
 
 export default mongoose.model('Flats',flatSchema)

@@ -1,10 +1,9 @@
 import ApiResponse from '../../utils/apiResponse.js';
 import FlatModel from './model.js';
 import mongoose from 'mongoose';
-import UserModel from '../users/model.js';
-import {updateImgFlat} from '../libs/cloudDinary.js';
-import {uploadMultipleImages} from '../libs/cloudDinary.js';
+import { uploadMultipleImages } from '../libs/cloudDinary.js';
 import fs from 'fs-extra';
+import UserModel from '../users/model.js';
 
 /**
  * Extraer un flat de la base de datos.
@@ -36,40 +35,24 @@ export const getFlat = async (req, res) => {
  * @param {*} req  petición de la aplicación
  * @param {*} res  respuesta de la petición 
  * @returns     todos los flats de la base de datos
- */ 
-export const getFlats = async (req, res) => { 
+ */
+export const getFlats = async (req, res) => {
 
-    const { city, minRentPrice, maxRentPrice, minAreaSize, maxAreaSize, page = 1, limit = 3, sortField = 'areaSize', sortOrder = 'desc' } = req.query;
-    console.log('city:', city);
-    console.log('minRentPrice:', minRentPrice);
-    console.log('maxRentPrice:', maxRentPrice);
-    console.log('minAreaSize:', minAreaSize);
-    console.log('maxAreaSize:', maxAreaSize);
-    console.log('page:', page);
-    console.log('limit:', limit);
-    
+    const { city, minRentPrice, maxRentPrice, minAreaSize, maxAreaSize,  sortField = 'areaSize', sortOrder = 'desc' } = req.query;
+
+
     const filters = {};
-    
-    
+
+
     if (city) filters.city = city;
     if (minRentPrice) filters.rentPrice = { ...filters.rentPrice, $gte: minRentPrice };
     if (maxRentPrice) filters.rentPrice = { ...filters.rentPrice, $lte: maxRentPrice };
     if (minAreaSize) filters.areaSize = { ...filters.areaSize, $gte: minAreaSize };
     if (maxAreaSize) filters.areaSize = { ...filters.areaSize, $lte: maxAreaSize };
 
-    // Calcular el offset para la paginación
-    const offset = (page - 1) * limit;
-    /**
-     * city: sortDirection,
-        rentPrice: sortDirection,
-        areaSize: sortDirection
-     */
 
-    console.log('filters:', filters);
-    console.log('offset:', offset);
-    console.log('limit:', limit);
-    console.log('page:', page);
-    console.log('pageO:', parseInt(page));
+
+
 
     // Convertir sortOrder a -1 o 1
     const sortDirection = sortOrder === 'desc' ? -1 : 1;
@@ -77,38 +60,26 @@ export const getFlats = async (req, res) => {
     // Definir los campos de ordenación
     const sortOptions = {};
     sortOptions[sortField] = sortDirection;
-    
+
 
     console.log('sortOptions:', sortOptions);
 
     try {
 
         const flats = await FlatModel.find(filters)
-        .populate('user')
-        .skip(offset)
-        .limit(parseInt(limit))
-        .sort(sortOptions); // Ordenar por ciudad, precio y tamaño del área
+            .populate('user') // Ordenar por ciudad, precio y tamaño del área
 
-        const flat  = {};
-        const totalFlats = await FlatModel.countDocuments(filters);
-        flat.flatsTotal = flats.length;
-            flat.flats = flats;
-            flat.page = page;
-            flat.limit = limit;
-            flat.pages = Math.ceil(flats.length / limit);
-        if(flats.length === 0){
-            console.log('david',Math.ceil(totalFlats / limit),totalFlats,limit,page)
-            
+        const flat = {};
+    
+        if (flats.length === 0) {
+   
             return res.status(200).json(ApiResponse.success(200, 'No se encontraron flats', flat));
-         } else {
-            //flat.flatsO = flats.slice(offset, offset + parseInt(limit));
-            console.log('david',Math.ceil(totalFlats / limit),totalFlats,limit,page)
-            console.log('aqui',flats.length)
+        } else {
             return res.status(200).json(ApiResponse.success(200, 'Flats obtenidos con éxito', flat));
-         }
+        }
 
 
-        
+
     } catch (error) {
         console.error('Error getting flats:', error);
         return res.status(500).json(ApiResponse.error(500, 'Error interno del servidor', error.message));
@@ -128,57 +99,76 @@ export const createFlat = async (req, res) => {
     console.log('Ingreso a createFlat', req);
     let foto = null;
     try {
-        const { title, description, areaSize, city, dateAvailable, hasAc, rentPrice, streetName, streetNumber, user, yearBuilt, bathroom, bedrooms, parkingLot, petsAllowed } = req.body;
+        const { realStateType, areaSize, city, sellType, publishedData, dateAvailable, hasAc, rentPrice, streetName, streetNumber, user, yearBuilt, bathroom, bedrooms, parkingLot, petsAllowed } = req.body;
 
         // Verificar que todos los campos están presentes
-        if (!title || !description || !areaSize || !city || !dateAvailable || !hasAc || !rentPrice || !streetName || !streetNumber || !user || !yearBuilt) {
+        if (!realStateType || !sellType || !publishedData) {
             return res.status(400).json(ApiResponse.error(400, 'All fields are required!', null));
         }
+
+        const userExists = await UserModel.findById(user);
+        console.log('userExists:', userExists);
+        if (!userExists) {
+            return res.status(404).json(ApiResponse.error(404, 'User not found', null));
+        }
+
+        const userFirstName = userExists.firstName;
+        console.log('userName:', userFirstName);
+
+        const userLastName = userExists.lastName;
+        console.log('userLastName:', userLastName);
 
         // Verificar si el valor del usuario es un ObjectId válido
         if (!mongoose.Types.ObjectId.isValid(user)) {
             return res.status(400).json(ApiResponse.error(400, 'Invalid user ID', null));
         }
         // Subir imagen a Cloudinary
-        const nameflat =  extractUsername(title);
-        console.log('nameflat',nameflat);
+        const nameflat = extractUsername(realStateType);
+        console.log('nameflat', nameflat);
 
-        
+
         let imageUrls = [];
 
         if (req.files && req.files.img) {
             const files = Array.isArray(req.files.img) ? req.files.img : [req.files.img];
             imageUrls = await uploadMultipleImages(files, `flats/${nameflat}`);
-            
+
             // Eliminar archivos temporales
             for (const file of files) {
-                console.log('file',file);
+                console.log('file', file);
                 await fs.remove(file.tempFilePath);
             }
         }
-        
-        console.log('Mensajes',req.body.img);
+
+     
+
+        console.log('Mensajes', req.body.img);
         const newFlat = new FlatModel({
-            title,
-            description,
+            realStateType,
             areaSize,
             city,
+            sellType,
+            publishedData,
             dateAvailable,
             hasAc,
             rentPrice,
             streetName,
             streetNumber,
-            user: new mongoose.Types.ObjectId(user),
             yearBuilt,
-            img: imageUrls,
             bathroom,
             bedrooms,
             parkingLot,
-            petsAllowed
-            
+            petsAllowed,
+            user: new mongoose.Types.ObjectId(user),
+            yearBuilt,
+            img: imageUrls,
+
+
         });
-        // Guardar el flat
+        
+
         const savedFlat = await newFlat.save();
+
         return res.status(201).json(ApiResponse.success(201, 'Flat creado con éxito', savedFlat));
     } catch (error) {
         console.error('Error creating flat:', error);
@@ -192,11 +182,11 @@ export const createFlat = async (req, res) => {
  * @param {*} res   respuesta de la petición
  * @returns     flat actualizado
  */
-export const updateFlat = async (req, res) => { 
+export const updateFlat = async (req, res) => {
     console.log('Ingreso a updateFlat', req.body)
 
     const { idFlat } = req.params;
-    const { title, description, areaSize, city, dateAvailable, hasAc, rentPrice, streetName, streetNumber, user, yearBuilt } = req.body;
+    const { realStateType, areaSize, city, dateAvailable, hasAc, rentPrice, streetName, streetNumber, user, yearBuilt } = req.body;
     if (!idFlat) {
         return res.status(400).json(ApiResponse.error(400, 'ID de flat requerido', null));
     }
@@ -210,8 +200,7 @@ export const updateFlat = async (req, res) => {
     }
     try {
         const updatedFlat = await FlatModel.findByIdAndUpdate(idFlat, {
-            title,
-            description,
+            realStateType,
             areaSize,
             city,
             dateAvailable,
@@ -236,7 +225,7 @@ export const updateFlat = async (req, res) => {
  * @param {*} res 
  * @returns 
  */
-export const deleteFlat = async (req, res) => { 
+export const deleteFlat = async (req, res) => {
     const { idFlat } = req.params;
     if (!idFlat) {
         return res.status(400).json(ApiResponse.error(400, 'ID de flat requerido', null));
@@ -267,8 +256,8 @@ export const deleteFlat = async (req, res) => {
  * @param {*} res 
  */
 export const getUserCreatedFlats = async (req, res) => {
-    
-    const { page = 1, limit = 10 ,userId} = req.query;  // Valores por defecto para page y limit
+
+    const { page = 1, limit = 10, userId } = req.query;  // Valores por defecto para page y limit
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
         return res.status(400).json(ApiResponse.error(400, 'ID de usuario inválido', null));
@@ -304,7 +293,7 @@ export const getUserCreatedFlats = async (req, res) => {
  * @returns {string} - Nombre de usuario sin caracteres especiales
  */
 const extractUsername = (direcion) => {
-   const cleanUsername = direcion.replace(/[^a-zA-Z0-9]/g, '').replace(/\s+/g, ''); // Elimina caracteres especiales y espacios
+    const cleanUsername = direcion.replace(/[^a-zA-Z0-9]/g, '').replace(/\s+/g, ''); // Elimina caracteres especiales y espacios
     const randomNumber = Math.floor(100 + Math.random() * 900); // Genera un número aleatorio de 3 dígitos
     return `${cleanUsername}${randomNumber}`; // Añade el número aleatorio al final
 }
