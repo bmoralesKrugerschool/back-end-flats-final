@@ -23,10 +23,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
  * @returns 
  */
 export const register = async (req, res) => {
-    const { name, lastName, email, password, role, status, birthDate } = req.body;
+    const { firstName, lastName, email, password, role, status, birthDate } = req.body;
     
     // Validación de campos obligatorios
-    if (!name || !lastName || !email || !password || !role || !status || !birthDate ) {
+    if (!firstName || !lastName || !email || !password || !role || !status || !birthDate ) {
         return res.status(400).json(ApiResponse.error(400, 'All fields are required!.', null));
     }
 
@@ -68,7 +68,7 @@ export const register = async (req, res) => {
 
         // Crear nuevo usuario
         const newUser = new UserModel({
-            name,
+            firstName,
             lastName,
             email,
             password: hashedPassword,
@@ -86,7 +86,7 @@ export const register = async (req, res) => {
             id: savedUser._id, 
             email: savedUser.email,
             lastName: savedUser.lastName,
-            name: savedUser.name,
+            firstName: savedUser.firstName,
             role: savedUser.role,
         });
 
@@ -132,7 +132,7 @@ export const login = async (req, res) => {
         const token = await createAccessToken({ 
             id: user._id, 
             email: user.email, 
-            name: user.name, 
+            firstName: user.firstName, 
             lastName: user.lastName, 
             role: user.role});
 
@@ -172,7 +172,7 @@ export const profile = async (req, res) => {
 
         const activeUser = {
             id: user._id,
-            name: user.name,
+            firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
             role: user.role,

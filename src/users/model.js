@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
-    name:{ //Nombre del usurio
+    firstName:{ //Nombre del usurio
         type:String,
         required: true, //Es requerido
         trim:true, //Elimina espacios al comienzo y al final
