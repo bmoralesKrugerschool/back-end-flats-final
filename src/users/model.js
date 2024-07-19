@@ -38,9 +38,7 @@ const userSchema = new mongoose.Schema({
     photos:{ //Imagen del usuario    
         type: Object,
         default: 'https://res.cloudinary.com/dv7hsw3kg/image/upload/v1629890099/avatars/avatar-1_ayx1tj.png'
-    },
-
-
+    }
 
 },{
     timestamps: true

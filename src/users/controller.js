@@ -1,9 +1,10 @@
 import ApiResponse from '../../utils/apiResponse.js';
 import UserModel from './model.js';
-
+import {updateImg} from '../libs/cloudDinary.js';
 import jwt from 'jsonwebtoken';
 import { TOKEN_SECRET } from '../config.js';
-
+import fs from 'fs-extra';
+import crypto from 'crypto';
 
 /**
  * Actualizar el usuario en la base de datos.
@@ -14,19 +15,42 @@ export const updateUser = async (req, res) => {
     try {
         console.log('update user', req.params, req.body);
         console.log('update user', req.cookies);
+        
         const { token } = req.cookies;
         if (!token) {
             return res.status(401).json(ApiResponse.error(401, 'No autorizado', null));
         }
-        const decoded = jwt.verify(token, TOKEN_SECRET);
         
-        console.log('req.body:', req.body);
+        const decoded = jwt.verify(token, TOKEN_SECRET);
+        console.log('req.body:', decoded);
 
-        const user = await UserModel.findByIdAndUpdate(
-            decoded._id, req.body, { new: true });
+        let foto = null;
+        if (req.files) {
+            const imagenes = {
+                tempFilePath: req.files.photos.tempFilePath,
+                user: decoded.id
+            };
+
+            console.log('imagenes:', imagenes);
+            const result = await updateImg(imagenes);
+            console.log('result:', result   );
+            await fs.remove(req.files.photos.tempFilePath);
+            foto = {
+                url: result.secure_url,
+                public_id: result.public_id
+            };
+        }
+
+        const updateData = { ...req.body };
+        if (foto) {
+            updateData.photos = foto;
+        }
+
+        const user = await UserModel.findByIdAndUpdate(decoded._id, updateData, { new: true });
         console.log('user:', user);
+
         return res.status(200).json(ApiResponse.success(200, 'Usuario actualizado con éxito', user));
-        } catch (error) {
+    } catch (error) {
         console.error('Error al actualizar usuario:', error);
         return res.status(500).json(ApiResponse.error(500, 'Error al actualizar usuario', error));
     }
