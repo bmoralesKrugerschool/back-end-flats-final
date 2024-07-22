@@ -37,6 +37,7 @@ export const getFlat = async (req, res) => {
  * @returns     todos los flats de la base de datos
  */
 export const getFlats = async (req, res) => {
+    console.log('Ingreso a getFlats', req.query);
 
     const { city, minRentPrice, maxRentPrice, minAreaSize, maxAreaSize,  sortField = 'areaSize', sortOrder = 'desc' } = req.query;
 
@@ -50,7 +51,11 @@ export const getFlats = async (req, res) => {
     if (minAreaSize) filters.areaSize = { ...filters.areaSize, $gte: minAreaSize };
     if (maxAreaSize) filters.areaSize = { ...filters.areaSize, $lte: maxAreaSize };
 
-
+    console.log('filters:', filters);
+    console.log('sortField:', sortField);
+    console.log('sortOrder:', sortOrder);
+    console.log('sortOrder:', sortOrder);
+    
 
 
 
@@ -66,17 +71,20 @@ export const getFlats = async (req, res) => {
 
     try {
 
-        const flats = await FlatModel.find(filters)
-            .populate('user') // Ordenar por ciudad, precio y tamaño del área
+        const flats = await FlatModel.find(filters).populate('user') // Ordenar por ciudad, precio y tamaño del área
 
-        const flat = {};
-    
-        if (flats.length === 0) {
-   
-            return res.status(200).json(ApiResponse.success(200, 'No se encontraron flats', flat));
-        } else {
-            return res.status(200).json(ApiResponse.success(200, 'Flats obtenidos con éxito', flat));
+        
+        if (!flats) {
+            return res.status(404).json(ApiResponse.error(404, 'Flats no encontrados', null));
         }
+
+        if (flats.length === 0) {
+            return res.status(200).json(ApiResponse.success(200, 'No se encontraron flats', flats));
+        } else {
+            return res.status(200).json(ApiResponse.success(200, 'Flats obtenidos con éxito', flats));
+        }
+
+        
 
 
 
@@ -256,29 +264,17 @@ export const deleteFlat = async (req, res) => {
  * @param {*} res 
  */
 export const getUserCreatedFlats = async (req, res) => {
+    const { idUser } = req.query;
+    console.log('idUser:', idUser);
 
-    const { page = 1, limit = 10, userId } = req.query;  // Valores por defecto para page y limit
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
+    if (!mongoose.Types.ObjectId.isValid(idUser)) {
         return res.status(400).json(ApiResponse.error(400, 'ID de usuario inválido', null));
     }
 
     try {
-        const options = {
-            page: parseInt(page, 10),
-            limit: parseInt(limit, 10),
-            lean: true  // Usar lean para mejorar el rendimiento
-        };
-
-        // Buscar todos los flats creados por el usuario con paginación
-        const flats = await FlatModel.paginate({ user: userId }, options);
-
+        const flats = await FlatModel.find({ user: idUser }).populate('user');
         return res.status(200).json(ApiResponse.success(200, 'Flats obtenidos con éxito', {
-            flats: flats.docs,
-            totalDocs: flats.totalDocs,
-            totalPages: flats.totalPages,
-            page: flats.page,
-            limit: flats.limit
+            flats: flats
         }));
     } catch (error) {
         console.error('Error getting user created flats:', error);
