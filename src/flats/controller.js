@@ -293,3 +293,21 @@ const extractUsername = (direcion) => {
     const randomNumber = Math.floor(100 + Math.random() * 900); // Genera un número aleatorio de 3 dígitos
     return `${cleanUsername}${randomNumber}`; // Añade el número aleatorio al final
 }
+
+
+
+// Funcion para obtener los datos con berear
+
+export const getFlatsBerear = async (req, res) => {
+
+    try {
+        const flats = await FlatModel.find().populate('user');
+        return res.status(200).json(ApiResponse.success(200, 'Flats obtenidos con éxito', {
+            flats: flats
+        }));
+    } catch (error) {
+        console.error('Error getting user created flats:', error);
+        return res.status(500).json(ApiResponse.error(500, 'Error en el servidor', error));
+    }
+}
+// Funcion para obtener los datos con berear
