@@ -12,9 +12,9 @@ import crypto from 'crypto';
 import VerificationCode from '../code/model.js';
 
 import { sendVerificationEmail } from '../libs/emailService.js';
-import jwt from 'jsonwebtoken';
+import e from 'express';
 
-const JWT_SECRET = 'k123' || 'k123';
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 /**
  * Registro de usuario para la aplicación.
@@ -24,12 +24,9 @@ const JWT_SECRET = 'k123' || 'k123';
  */
 export const register = async (req, res) => {
     const { firstName, lastName, email, password, role, status, birthDate } = req.body;
-    console.log('Mensajes',req.body);
     
     // Validación de campos obligatorios
     if (!firstName || !lastName || !email || !password || !role || !status || !birthDate ) {
-       
-        
         return res.status(400).json(ApiResponse.error(400, 'All fields are required!.', null));
     }
 
@@ -94,10 +91,8 @@ export const register = async (req, res) => {
         });
 
         // Guardar el token en una cookie
-        res.cookie('token', token, {
-             sameSite:'none',
-                secure:true
-            });
+        res.cookie('token', token, { httpOnly: true });
+
 
         return res.status(201).json(ApiResponse.success(201, 'Usuario registrado con éxito', { token, user: savedUser }));
     } catch (error) {
@@ -142,11 +137,7 @@ export const login = async (req, res) => {
             role: user.role});
 
         // Guardar el token en una cookie
-        res.cookie('token', token, { 
-            sameSite:'none',
-            secure:true,
-            httpOnly: false,
-         });
+        res.cookie('token', token, { httpOnly: true });
 
         return res.status(200).json(ApiResponse.success(200, 'Inicio de sesión exitoso.', { token, user }));
     } catch (error) {
@@ -328,39 +319,3 @@ const extractUsername = (email) => {
     const randomNumber = Math.floor(100 + Math.random() * 900); // Genera un número aleatorio de 3 dígitos
     return `${cleanUsername}${randomNumber}`; // Añade el número aleatorio al final
 }
-
-
-//Verificar el token
-export const verifyToken = async (req, res) => {
-    console.log('verify token');
-    const { token } = req.cookies;
-
-    if (!token) {
-        return res.status(400).json(ApiResponse.error(400, 'Token is required.', null));
-    }
-
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        if (!decoded) {
-            return res.status(401).json(ApiResponse.error(401, 'Invalid token.', null));
-        }
-
-        const userFound = await UserModel.findById(decoded.id);
-        console.log('userFound',userFound);
-        if (!userFound) {
-            return res.status(404).json(ApiResponse.error(404, 'User not found.', null));
-        }
-
-        const user = {
-            id: userFound._id,
-            firstName: userFound.firstName,
-            lastName: userFound.lastName,
-            email: userFound.email,
-            role: userFound.role,
-        };
-
-        return res.status(200).json(ApiResponse.success(200, 'Token verified.', user));
-    } catch (error) {
-        return res.status(401).json(ApiResponse.error(401, 'Invalid token.', null));
-    }
-};
